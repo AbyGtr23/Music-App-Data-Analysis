@@ -1,0 +1,191 @@
+Q.1- List all artists for each record label sorted by artist name.
+
+A.1- 
+Select a.name as Artists, b.name as Record_Lbl 
+From artist a Inner Join record_label b on a.record_label_id=b.id 
+order by Artists;
+
+
+Q.2- Which record labels have no artists?
+
+A.2- 
+Select a.name 
+from record_label a left join artist b on a.id=b.record_label_id 
+where b.record_label_id is null;
+
+
+Q.3 - List the number of songs per artist in descending order.
+
+A.3 - 
+Select a.name, count(c.name) as songs from artist a left join album b on a.id = b.artist_id inner join song c on b.id = c.album_id
+group by a.name
+order by songs desc;
+
+
+Q.4- Which artist or artists have recorded the most number of songs?
+
+A.4- 
+Select TOP 1 a.name, count(b.name) as No_of_Songs 
+from artist a inner join album c on a.id=c.artist_id inner join song b on c.id=b.album_id 
+group by a.name 
+order by No_of_Songs DESC;
+
+
+Q.5- Which artist or artists have recorded the least number of songs?
+
+A.5- 
+Select top 1 with ties a.name, COUNT(b.name) as No_of_Songs
+from artist a inner join album c on a.id=c.artist_id
+inner join song b on c.id=b.album_id
+group by a.name
+order by No_of_Songs ASC;
+
+
+Q.6- How many artists have recorded the least number of songs? Hint: we can wrap the results of query 5. with another select to give us total artist count
+
+A.6-  
+WITH ArtistSongCount AS (
+SELECT a.Id AS ArtistId, a.name AS ArtistName, COUNT(c.ID) AS SongCount
+FROM Artist a
+LEFT JOIN Album b ON a.Id = b.Artist_Id
+LEFT JOIN Song c ON b.Id = c.Album_id
+GROUP BY a.Id, a.name)
+
+
+SELECT COUNT(*) AS 'No. of Artist Having Recorded the Least No. of Songs'
+FROM ArtistSongCount
+WHERE SongCount = (SELECT MIN(SongCount) FROM ArtistSongCount);
+
+
+Q.7- Which artists have recorded songs longer than 5 minutes, and if so, how many songs were recorded?
+
+A.7- 
+Select a.name as Artist_name, count(c.name) as No_of_Songs_Longer_than_5_min
+from artist a
+inner Join album b on a.id=b.artist_id
+inner join song c on b.id=c.album_id
+where c.duration > 5
+GROUP BY a.name
+ORDER BY Artist_name;
+
+
+Q.8- For each artist and album how many songs were less than 5 minutes long? 
+A.8- Select a.name as Artist_name, b.name as Album_Name, count(c.name) as No_of_Songs_Less_than_5_min
+from artist a
+inner Join album b on a.id=b.artist_id
+inner join song c on b.id=c.album_id
+where c.duration < 5
+GROUP BY a.name, b.name
+ORDER BY Artist_name;
+
+
+Q.9- In which year or years were the most songs recorded?
+A.9- Select top 1 a.year, count(b.name) as Songs_Recorded 
+from album a inner join song b on a.id=b.album_id 
+group by a.year 
+order by max(b.name) desc;
+
+
+Q.10- List the artist, song and year of the top 5 longest recorded songs
+A.10- 
+Select top 5 a.name as Artist_Name, b.name as Album_Name, c.name as Song, b.year as Year_Recorded, c.duration as Duration
+From artist a
+Inner Join album b on a.id=b.artist_id
+inner JOin song c on b.id=c.album_id
+Group by a.name, b.name, c.name, b.year, c.duration
+Order by c.duration Desc;
+
+
+Q.11- List a table showing the Number of albums recorded for each year.
+A.11- 
+Select a.year as 'Year', COUNT(b.name) as Albums_Recorded 
+from album a inner join album b on a.id=b.id 
+Group by a.year 
+Order by a.year;
+
+
+Q.12- What is the max number of recorded albums across all the years?
+A.12- 
+SELECT MAX(Albums_Recorded) AS 'Max Number of Albums Recorded per Year for All Year'
+FROM (
+  SELECT COUNT(b.name) AS Albums_Recorded
+  FROM album a
+  INNER JOIN album b ON a.id = b.id
+  GROUP BY a.year
+) AS AlbumCounts;
+
+
+Q.13- In which year (or years) were the most (max) number of albums recorded, and how many were recorded?
+A.13-  
+Select Top 2 a.year as 'Year', count(b.name) as 'Max No of Albums Recorded' 
+from album a inner join album b on a.id=b.id 
+Group by a.year 
+order by count(b.name) desc;
+
+
+Q.14- List the total duration of all songs recorded by each artist in descending order.
+A.14- 
+Select a.name as 'Artist', round(SUM(c.duration), 4) as 'Total Duration of All Songs'
+from artist a inner join album b on a.id=b.artist_id
+inner join song c on b.id=c.album_id
+Group By a.name
+Order by 'Total Duration of All Songs' DESC;
+
+
+Q.15- For which artist and album are there no songs less than 5 minutes long?
+A.15- 
+Select distinct a.name as 'Artist', b.name as 'Album' from artist a inner join album b on a.id=b.artist_id
+inner join song c  on b.id=c.album_id
+where not exists(
+   select 1
+   from song c
+   where c.album_id = b.Id
+   and c.duration < 5);
+
+
+Q.16- Display a table of all artists, albums, songs and song duration, all ordered in ascending order by artist, album and song.
+A.16- 
+Select a.name as 'Artist Name', b.name as 'Album Name', c.name as 'Song', c.duration as 'Duration'
+From artist a Join album b on a.id=b.artist_id
+Join song c on b.id=c.album_id
+Group by a.name, b.name, c.name, c.duration
+order by a.name ASC;
+
+
+Q.17- List the top 3 artists with the longest average song duration, in descending with longest average first.
+A.17-  
+Select Top 3 a.name as 'Artist Name',    Round(SUM(c.duration)/Count(c.name), 3) as 'Avg Song Duration (Min)'
+From artist a inner join album b on a.id=b.artist_id
+inner join song c on c.album_id=b.id
+Group by a.name
+order by 'Avg Song Duration (Min)' Desc;
+
+
+Q.18- What is the total album length for all songs on the Beatles Sgt. Pepper's album - in minutes and seconds ?
+A.18-  
+Select a.name as 'Album Name', floor(sum(b.duration)) as "Minutes",
+  ROUND((SUM(CONVERT(DECIMAL(18, 4), b.duration)) % CONVERT(DECIMAL(18, 4), 1)) * 60, 0) AS Seconds
+From album a full outer join song b on a.id=b.album_id
+where a.name like 'Sgt%'
+group by a.name;
+
+
+Q.19- Which artists did not release an album during the decades of the 1980's and the 1990's?
+A.19- 
+SELECT a.name
+FROM Artist a
+WHERE a.Id NOT IN (
+SELECT DISTINCT Artist_Id
+FROM Album
+WHERE Year BETWEEN 1980 AND 1989)
+order by a.name;
+
+
+Q.20- Which artists did release an album during the decades of the 1980's and the 1990's?
+A.20- 
+SELECT a.name
+FROM Artist a
+WHERE a.Id IN (
+SELECT DISTINCT Artist_Id
+FROM Album
+WHERE Year BETWEEN 1980 AND 1989);
